@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.2.4';
+    const VERSION = '1.3.0';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -73,6 +73,11 @@ window.__ModuleLoader__.load({
       methodNumberDesc: '心中默念所问之事，给出一个三位数，或点「随机取数」',
       methodChar: '一字占',
       methodCharDesc: '写下一个字，交给 AI 拆字算笔画起卦（测字法）',
+      methodManual: '手动起卦',
+      methodManualDesc: '直接指定上卦、下卦与动爻，六十四卦任意组合',
+      manualUpper: '上卦',
+      manualLower: '下卦',
+      manualMoving: '动爻',
       charPlaceholder: '一个字，如：想',
       charHint: '拆字与笔画由 AI 判断：上下结构取上半/下半，左右取左半/右半，包围取外框/内核，独体字按总笔画对半分。',
       charEcho: '已把「{char}」交给 AI 拆字起卦，请看对话。',
@@ -206,6 +211,11 @@ window.__ModuleLoader__.load({
       methodNumberDesc: 'Hold the question in mind and give a 3-digit number, or draw one',
       methodChar: 'By one character',
       methodCharDesc: 'Give a single character; the AI splits it and counts strokes',
+      methodManual: 'By hexagram',
+      methodManualDesc: 'Pick the upper and lower trigram and the moving line directly',
+      manualUpper: 'Upper',
+      manualLower: 'Lower',
+      manualMoving: 'Moving line',
       charPlaceholder: 'One character, e.g. 想',
       charHint: 'The AI splits it: top/bottom, left/right, outer/inner, or an even half for unsplittable characters.',
       charEcho: '「{char}」 sent to the AI to split and cast — see the conversation.',
@@ -311,6 +321,10 @@ window.__ModuleLoader__.load({
       question: '',
       number: '',
       char: '',
+      /** 手动起卦的三个选择：先天八卦序 1-8 与动爻 1-6，存字符串便于直接喂给 <select>。 */
+      manualUpper: '1',
+      manualLower: '1',
+      manualMoving: '1',
       busy: false,
       error: '',
       notice: '',
@@ -422,6 +436,12 @@ window.__ModuleLoader__.load({
       try {
         const payload = { method, question };
         if (method === 'number') payload.number = Number(String(number).trim());
+        // 手动起卦：把三个下拉框的选项原样交给宿主，范围校验在引擎那边做。
+        if (method === 'manual') {
+          payload.upper = Number(state.manualUpper);
+          payload.lower = Number(state.manualLower);
+          payload.moving = Number(state.manualMoving);
+        }
         const result = await api('cast', payload);
         setState({ cast: result, busy: false, records: null });
       } catch (error) {
@@ -737,7 +757,15 @@ window.__ModuleLoader__.load({
 .mhy-method[data-on="1"]{border-color:var(--dsw-alias-brand-primary);box-shadow:inset 0 0 0 1px var(--dsw-alias-brand-primary)}
 .mhy-method b{display:block;font-size:calc(13px * var(--mhy-s,1));color:var(--dsw-alias-label-primary);margin-bottom:2px}
 .mhy-method span{font-size:calc(12px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary)}
-.mhy-method-wide{grid-column:1/-1}
+/* 手动起卦：上卦 / 下卦 / 动爻三个下拉框 + 一张卦象预览 */
+.mhy-selects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mhy-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mhy-field-label{font-size:calc(12px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary)}
+.mhy-select{width:100%;box-sizing:border-box;font:inherit;font-size:calc(13px * var(--mhy-s,1));color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:8px;padding:7px 9px}
+.mhy-select:focus{outline:none;border-color:var(--dsw-alias-brand-primary)}
+.mhy-preview{display:flex;gap:16px;justify-content:center;margin-top:10px;padding:10px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-2)}
+.mhy-preview .mhy-tri{flex:0 0 110px;min-width:0}
+.mhy-preview .mhy-tri + .mhy-tri{margin-top:0}
 .mhy-card{margin-top:12px;padding:12px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-2)}
 /* 起卦信息：两列对齐成表格式；上下两块表用同一列宽，所以纵向也能对齐 */
 .mhy-rows{display:grid;grid-template-columns:68px 1fr;row-gap:3px;align-items:baseline}
@@ -1039,17 +1067,24 @@ body[data-ds-dark-theme] .mhy-panel{
      * ══════════════════════════════════════════ */
     /** 自然象 → 八卦。 */
     const NATURE_TRIGRAM = { 天: '乾', 泽: '兑', 火: '离', 雷: '震', 风: '巽', 水: '坎', 山: '艮', 地: '坤' };
-    /** 八卦 → 五行 + 三爻（自下而上，1=阳）。 */
+    /** 八卦 → 五行 + 三爻（自下而上，1=阳）+ 卦符。 */
     const TRIGRAM_FACTS = {
-      乾: { element: '金', lines: [1, 1, 1] },
-      兑: { element: '金', lines: [1, 1, 0] },
-      离: { element: '火', lines: [1, 0, 1] },
-      震: { element: '木', lines: [1, 0, 0] },
-      巽: { element: '木', lines: [0, 1, 1] },
-      坎: { element: '水', lines: [0, 1, 0] },
-      艮: { element: '土', lines: [0, 0, 1] },
-      坤: { element: '土', lines: [0, 0, 0] },
+      乾: { element: '金', lines: [1, 1, 1], symbol: '☰' },
+      兑: { element: '金', lines: [1, 1, 0], symbol: '☱' },
+      离: { element: '火', lines: [1, 0, 1], symbol: '☲' },
+      震: { element: '木', lines: [1, 0, 0], symbol: '☳' },
+      巽: { element: '木', lines: [0, 1, 1], symbol: '☴' },
+      坎: { element: '水', lines: [0, 1, 0], symbol: '☵' },
+      艮: { element: '土', lines: [0, 0, 1], symbol: '☶' },
+      坤: { element: '土', lines: [0, 0, 0], symbol: '☷' },
     };
+    /** 先天八卦序（1 乾 … 8 坤）：手动起卦下拉框的取值，与引擎 `TRIGRAMS` 的键一致。 */
+    const TRIGRAM_ORDER = ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤'];
+    /** 六爻位名（1 起）。 */
+    const YAO_ORDER = ['初', '二', '三', '四', '五', '上'];
+    /** 卦例里的 method 字符串 → i18n key（未知一律按时间起卦显示）。 */
+    const METHOD_KEYS = { 数字: 'methodNumber', 一字占: 'methodChar', 手动: 'methodManual' };
+    const methodKeyOf = (method) => METHOD_KEYS[method] || 'methodTime';
     /** 爻位字 → 序数。 */
     const YAO_POS = { 初: 1, 二: 2, 三: 3, 四: 4, 五: 5, 上: 6 };
 
@@ -1285,15 +1320,7 @@ body[data-ds-dark-theme] .mhy-panel{
           h(
             InfoRow,
             { label: t('methodLabel') },
-            h(
-              'span',
-              null,
-              r.method === '数字'
-                ? t('methodNumber')
-                : r.method === '一字占'
-                  ? t('methodChar')
-                  : t('methodTime'),
-            ),
+            h('span', null, t(methodKeyOf(r.method))),
             r.methodDetail ? h('span', { className: 'mhy-dim' }, `· ${r.methodDetail}`) : null,
           ),
           r.question ? h(InfoRow, { label: t('questionRow') }, h('span', null, r.question)) : null,
@@ -1517,6 +1544,61 @@ body[data-ds-dark-theme] .mhy-panel{
     /* ══════════════════════════════════════════
      *  面板
      * ══════════════════════════════════════════ */
+    /**
+     * 手动起卦：上卦 / 下卦 / 动爻三个下拉框，外加一张卦象预览。
+     * 卦名不在本地拼（六十四卦名表在引擎那边），起卦后由排盘给出。
+     */
+    function ManualPicker() {
+      const s = useStore();
+      const up = Number(s.manualUpper) || 1;
+      const lo = Number(s.manualLower) || 1;
+      const mv = Number(s.manualMoving) || 1;
+      const upperName = TRIGRAM_ORDER[up - 1] || TRIGRAM_ORDER[0];
+      const lowerName = TRIGRAM_ORDER[lo - 1] || TRIGRAM_ORDER[0];
+      const pattern = [...TRIGRAM_FACTS[lowerName].lines, ...TRIGRAM_FACTS[upperName].lines].map((n) => n === 1);
+      const triInfo = (name) => ({ name, element: TRIGRAM_FACTS[name].element });
+      const trigramOptions = TRIGRAM_ORDER.map((name, i) =>
+        h('option', { key: name, value: String(i + 1) }, `${i + 1} ${TRIGRAM_FACTS[name].symbol} ${name}`),
+      );
+      const field = (labelKey, key, value, options) =>
+        h(
+          'div',
+          { className: 'mhy-field' },
+          h('span', { className: 'mhy-field-label' }, t(labelKey)),
+          h(
+            'select',
+            {
+              className: 'mhy-select',
+              value,
+              onChange: (e) => setState({ [key]: e.target.value, error: '' }),
+            },
+            options,
+          ),
+        );
+      return h(
+        'div',
+        { style: { marginTop: '10px' } },
+        h(
+          'div',
+          { className: 'mhy-selects' },
+          field('manualUpper', 'manualUpper', s.manualUpper, trigramOptions),
+          field('manualLower', 'manualLower', s.manualLower, trigramOptions),
+          field(
+            'manualMoving',
+            'manualMoving',
+            s.manualMoving,
+            YAO_ORDER.map((name, i) => h('option', { key: name, value: String(i + 1) }, `${name}爻`)),
+          ),
+        ),
+        h(
+          'div',
+          { className: 'mhy-preview' },
+          h(Trigram, { info: triInfo(upperName), role: null, pattern, movingIndex: mv - 1, base: 3 }),
+          h(Trigram, { info: triInfo(lowerName), role: null, pattern, movingIndex: mv - 1, base: 0 }),
+        ),
+      );
+    }
+
     function CastTab() {
       const s = useStore();
       useTicker(s.open && s.tab === 'cast');
@@ -1568,12 +1650,23 @@ body[data-ds-dark-theme] .mhy-panel{
             'button',
             {
               type: 'button',
-              className: 'mhy-method mhy-method-wide',
+              className: 'mhy-method',
               'data-on': s.method === 'char' ? '1' : '0',
               onClick: () => setState({ method: 'char', error: '' }),
             },
             h('b', null, `字 ${t('methodChar')}`),
             h('span', null, t('methodCharDesc')),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'mhy-method',
+              'data-on': s.method === 'manual' ? '1' : '0',
+              onClick: () => setState({ method: 'manual', error: '' }),
+            },
+            h('b', null, `卦 ${t('methodManual')}`),
+            h('span', null, t('methodManualDesc')),
           ),
         ),
         s.method === 'number'
@@ -1612,6 +1705,7 @@ body[data-ds-dark-theme] .mhy-panel{
               h('div', { className: 'mhy-hint' }, t('charHint')),
             )
           : null,
+        s.method === 'manual' ? h(ManualPicker, null) : null,
         h(
           'div',
           { className: 'mhy-row', style: { marginTop: '14px' } },
