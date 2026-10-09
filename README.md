@@ -39,6 +39,19 @@ dsh plugin install github:Sakura7301/MeiHuaYi
 
 本插件**没有任何 npm 依赖**，因此无需构建步骤，也不需要 `allowBuilds` 授权。
 
+<details>
+<summary>安装时报 github.com 连接超时？</summary>
+
+插件管理器解析 git 依赖时**只走 HTTPS(443)**。如果你的机器只能通过 SSH 访问 GitHub，
+pnpm 会报 `ERR_PNPM_GIT_RESOLVE_FAILED` 或 `connection to github.com timed out`。
+让 git 把 GitHub 的 HTTPS 就地改写成 SSH 即可（装在别处的 URL 不受影响）：
+
+```sh
+git config --global url."git@github.com:".insteadOf "https://github.com/"
+```
+
+</details>
+
 > 唯一的外部要求来自宿主自身：Host 半边用到 `tools`、`webServer`、`skills` 服务，
 > Client 半边用到 `@deepseek-ai/dsh-client-locale`（中英文案）。这些都由 Harness 提供。
 
