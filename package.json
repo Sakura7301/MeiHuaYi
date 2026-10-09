@@ -1,0 +1,55 @@
+{
+  "name": "@sakura7301/dsh-meihuayi",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "梅花易数卜卦插件：聊天起卦与界面点击起卦，输出完整排盘（主卦/互卦/变卦、动爻、体用生克），可保存卦例、记录外应与学习笔记。",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib",
+    "data",
+    "locale",
+    "icon.svg",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sakura7301/dsh-meihuayi.git"
+  },
+  "homepage": "https://github.com/Sakura7301/dsh-meihuayi#readme",
+  "bugs": {
+    "url": "https://github.com/Sakura7301/dsh-meihuayi/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "meihua",
+    "yijing",
+    "iching",
+    "divination",
+    "梅花易数"
+  ],
+  "author": "Sakura7301"
+}

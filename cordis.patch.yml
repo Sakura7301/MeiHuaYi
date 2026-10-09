@@ -1,0 +1,5 @@
+# 梅花易数卜卦插件：装配 Host 半边（工具 + Web 路由 + 运行时技能）与 Web Client 半边。
+- insert:
+    - id: dsh-meihuayi
+      name: '@sakura7301/dsh-meihuayi'
+      config: {}
