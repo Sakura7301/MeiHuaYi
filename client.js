@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.4.0';
+    const VERSION = '1.4.1';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -138,6 +138,9 @@ window.__ModuleLoader__.load({
       saving: '保存中…',
       accuracy: '准确率',
       ratedCount: '条已反馈',
+      hostStaleUnknown: '宿主未重启',
+      hostStalePrefix: '宿主',
+      hostStaleHint: '宿主仍是旧版：老卦例补齐、准确率口径这类宿主侧改动，要重启 DSH 才生效（只刷新页面不够）。',
       notes: '条学习笔记',
       records: '条卦例',
       pendingCount: '条待反馈',
@@ -275,6 +278,9 @@ window.__ModuleLoader__.load({
       saving: 'Saving…',
       accuracy: 'Accuracy',
       ratedCount: 'rated',
+      hostStaleUnknown: 'host not restarted',
+      hostStalePrefix: 'host',
+      hostStaleHint: 'The host is an older build: host-side changes (record backfill, stats basis…) only take effect after restarting DSH — refreshing the page is not enough.',
       notes: 'study notes',
       records: 'records',
       pendingCount: 'unresolved',
@@ -806,6 +812,8 @@ body[data-ds-dark-theme] .mhy-panel{
 .mhy-wx-metal{background:var(--mhy-wx-metal-bg);color:var(--mhy-wx-metal-fg);border-color:var(--mhy-wx-metal-bd)}
 .mhy-wx-water{background:var(--mhy-wx-water-bg);color:var(--mhy-wx-water-fg);border-color:var(--mhy-wx-water-bd)}
 .mhy-ver{margin-left:6px;font-size:calc(11px * var(--mhy-s,1));font-weight:400;color:var(--dsw-alias-label-secondary)}
+/* 宿主没重启时的提示：宿主上报版本了才算新版，没上报就是旧宿主 */
+.mhy-ver-stale{margin-left:6px;font-size:calc(11px * var(--mhy-s,1));font-weight:400;color:var(--dsw-alias-state-error-primary);cursor:help;white-space:nowrap}
 .mhy-gz{margin-right:6px}
 .mhy-gz:last-child{margin-right:0}
 .mhy-gz-unit{color:var(--dsw-alias-label-secondary)}
@@ -1092,6 +1100,19 @@ body[data-ds-dark-theme] .mhy-panel{
     /** 卦例里的 method 字符串 → i18n key（未知一律按时间起卦显示）。 */
     const METHOD_KEYS = { 数字: 'methodNumber', 一字占: 'methodChar', 手动: 'methodManual' };
     const methodKeyOf = (method) => METHOD_KEYS[method] || 'methodTime';
+
+    /**
+     * 宿主 / 界面的版本对照。
+     *
+     * 客户端与宿主是两份独立加载的代码：只刷新页面、没重启宿主时，宿主侧的改动
+     * 不会生效（老卦例补齐、准确率口径之类），而界面上又看不出差别——这一轮就是这么
+     * 白等掉的。宿主**上报了**版本才说明它是新版；没上报就是旧宿主。
+     * @returns {{hostVersion:string, stale:boolean}|null} null = 两边一致，不必提示
+     */
+    function hostVersionHint(hostVersion, clientVersion) {
+      if (hostVersion && hostVersion === clientVersion) return null;
+      return { hostVersion: hostVersion ? String(hostVersion) : '', stale: true };
+    }
     /** 爻位字 → 序数。 */
     const YAO_POS = { 初: 1, 二: 2, 三: 3, 四: 4, 五: 5, 上: 6 };
 
@@ -1328,11 +1349,12 @@ body[data-ds-dark-theme] .mhy-panel{
             { label: t('wuxingShort'), big: true },
             h(WuxingNodes, { wuxing: r.wuxing, fallback: r.wuxingText }),
           ),
-          // 空亡与逢空紧跟在旺衰下面：都是「当下状态」的判据，挨着看好对照
+          // 空亡 / 逢空 / 神煞 紧跟在旺衰下面：都是「当下状态」的判据，挨着看好对照
           kongParts(r) ? h(InfoRow, { label: t('kongwangRow') }, h('span', null, kongParts(r).head)) : null,
           kongParts(r) && kongParts(r).detail
             ? h(InfoRow, { label: t('kongHitRow') }, h('span', { className: 'mhy-dim' }, kongParts(r).detail))
             : null,
+          shenshaText(r) ? h(InfoRow, { label: t('shenshaRow') }, h('span', null, shenshaText(r))) : null,
           h(
             InfoRow,
             { label: t('methodLabel') },
@@ -1375,8 +1397,7 @@ body[data-ds-dark-theme] .mhy-panel{
           !zongCard && zongText(r)
             ? h(InfoRow, { label: t('zongguaRow') }, h('span', null, zongText(r)))
             : null,
-          // 空亡 / 逢空已挪到上方「旺衰」下面（都是当下状态判据，挨着看好对照）
-          shenshaText(r) ? h(InfoRow, { label: t('shenshaRow') }, h('span', null, shenshaText(r))) : null,
+          // 空亡 / 逢空 / 神煞 都挪到上方「旺衰」下面了，这里不再重复
         ),
       );
     }
@@ -2042,6 +2063,8 @@ body[data-ds-dark-theme] .mhy-panel{
     /** 面板主体（不含外层容器）。 */
     function PanelBody({ anchor }) {
       const s = useStore();
+      // 宿主上报的版本（旧宿主没有这个字段）→ 用来暴露「没重启宿主」这种不同步
+      const hostHint = hostVersionHint(s.clock && s.clock.version, VERSION);
       return h(
         'div',
         {
@@ -2051,7 +2074,19 @@ body[data-ds-dark-theme] .mhy-panel{
         h(
           'div',
           { className: 'mhy-head' },
-          h('h2', null, `☯ ${t('title')}`, h('span', { className: 'mhy-ver' }, `v${VERSION}`)),
+          h(
+            'h2',
+            null,
+            `☯ ${t('title')}`,
+            h('span', { className: 'mhy-ver' }, `v${VERSION}`),
+            hostHint
+              ? h(
+                  'span',
+                  { className: 'mhy-ver-stale', title: t('hostStaleHint') },
+                  hostHint.hostVersion ? `${t('hostStalePrefix')} v${hostHint.hostVersion}` : t('hostStaleUnknown'),
+                )
+              : null,
+          ),
           h('span', { className: 'mhy-sub' }, t('subtitle')),
           h(
             'button',
