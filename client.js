@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.2.3';
+    const VERSION = '1.2.4';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -1368,18 +1368,23 @@ body[data-ds-dark-theme] .mhy-panel{
     }
 
     /**
-     * 笔记条数怎么取。
+     * 统计行的口径判定。
      *
-     * `stats.notes` 由宿主提供，但客户端与宿主是**两份独立加载的代码**：
-     * 只刷新页面、没重启宿主时，旧宿主不会返回这个字段。此时绝不能显示 0
-     * （那会把 3 条笔记写成 0 条），退回「本次加载到的笔记条数」；
-     * 若列表正被「只看错题」筛过，就干脆不显示这个数字。
-     * @returns {number|null} null 表示「不知道，别显示」
+     * 客户端与宿主是**两份独立加载的代码**：只刷新页面、没重启宿主时，两边的口径会不一致。
+     * 判据是 `stats.notes` 是否存在——那是新版宿主才返回的字段：
+     *   · 新版：total = 已反馈卦例数，笔记数单列（noteTotal）。
+     *   · 旧版：没有 notes 字段，total 仍是笔记条数 → 基数标签改用「笔记」，
+     *     并且**不再单列笔记数**，否则同一行会出现两遍「3 条学习笔记」。
+     * 拿不准时宁可不显示，也不拿 0 顶替未知值。
      */
-    function noteCountOf(stats, loadedRows, filtered) {
-      if (stats && typeof stats.notes === 'number') return stats.notes;
-      if (filtered) return null;
-      return Array.isArray(loadedRows) ? loadedRows.length : null;
+    function statsView(stats) {
+      const modern = !!(stats && typeof stats.notes === 'number');
+      return {
+        modern,
+        base: stats ? stats.total ?? 0 : 0,
+        baseIsNotes: !modern,
+        noteTotal: modern ? stats.notes : null,
+      };
     }
 
     /** 笔记页：准确率统计 + 笔记列表（可只看错题）。 */
@@ -1387,10 +1392,8 @@ body[data-ds-dark-theme] .mhy-panel{
       const s = useStore();
       const rows = s.notes || [];
       const stats = s.noteStats;
-      const noteTotal = noteCountOf(stats, rows, s.notesIncorrectOnly);
-      // 宿主返回了 notes 才说明它是新版：此时 total 是「已反馈卦例」；
-      // 旧宿主没这个字段，它的 total 仍是笔记条数，标签得跟着换，别张冠李戴。
-      const baseLabel = stats && typeof stats.notes === 'number' ? t('ratedCount') : t('notes');
+      const view = statsView(stats);
+      const baseLabel = view.baseIsNotes ? t('notes') : t('ratedCount');
       return h(
         'div',
         null,
@@ -1426,11 +1429,11 @@ body[data-ds-dark-theme] .mhy-panel{
                 { className: 'mhy-stats' },
                 // 准确率的基数是「现存卦例里已反馈的那些」，笔记条数单独列，
                 // 免得删了卦例之后两个数字对不上、让人以为统计没生效。
-                h('span', null, h('b', null, stats.total ?? 0), ` ${baseLabel}`),
+                h('span', null, h('b', null, view.base), ` ${baseLabel}`),
                 h('span', null, `${t('accuracy')} `, h('b', null, `${stats.accuracy}%`)),
                 h('span', null, `${t('noteCorrect')} `, h('b', null, stats.correct)),
                 h('span', null, `${t('noteWrong')} `, h('b', null, stats.incorrect)),
-                noteTotal === null ? null : h('span', null, h('b', null, noteTotal), ` ${t('notes')}`),
+                view.noteTotal === null ? null : h('span', null, h('b', null, view.noteTotal), ` ${t('notes')}`),
               )
             : null,
         ),
