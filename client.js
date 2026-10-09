@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.0.2';
+    const VERSION = '1.1.0';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -71,6 +71,31 @@ window.__ModuleLoader__.load({
       methodTimeDesc: '以当前时刻的农历年支、月、日、时起卦',
       methodNumber: '数字起卦',
       methodNumberDesc: '心中默念所问之事，给出一个三位数，或点「随机取数」',
+      methodChar: '一字占',
+      methodCharDesc: '写下一个字，交给 AI 拆字算笔画起卦（测字法）',
+      charPlaceholder: '一个字，如：想',
+      charHint: '拆字与笔画由 AI 判断：上下结构取上半/下半，左右取左半/右半，包围取外框/内核，独体字按总笔画对半分。',
+      charEcho: '已把「{char}」交给 AI 拆字起卦，请看对话。',
+      cuoguaRow: '错卦',
+      cuoguaNote: '六爻全翻，看反面与隐藏面',
+      zongguaRow: '综卦',
+      zongguaFixed: '覆卦不动',
+      zongguaNote: '上下颠倒，换对方视角',
+      kongwangRow: '空亡',
+      kongHitRow: '逢空',
+      shenshaRow: '神煞',
+      notHit: '未中',
+      charMethodName: '一字占',
+      charChatHead: '【梅花易数 · 一字占】',
+      charChatAsk: '请按字占章法拆这个字、算出两部分笔画，再用 meihuayi_cast（method="char"）起卦；',
+      charChatFlow: '起卦后先完整展示排盘，再问我起卦时的外应（天时/地理/人事/声音/颜色/器物/动静），这一步先别推断。',
+      charChatSave: '断完记得把外应原文与取象解读写回卦例。',
+      charChatGuard: '（若 meihuayi_cast 忽略 method="char"、回退成时间起卦，说明宿主还没重启，请先提示我重启再起卦。）',
+      charQuestion: '问：',
+      charRequired: '请先写下一个字，再起卦。',
+      charTarget: '所测之字：',
+      charManual: '无法自动发送，请手动发送上面的内容。',
+      charCopied: '已复制内容，粘贴到输入框发送即可。',
       numberPlaceholder: '三位数 100-999',
       randomDraw: '随机取数',
       cast: '起 卦',
@@ -178,6 +203,31 @@ window.__ModuleLoader__.load({
       methodTimeDesc: 'Uses the lunar year branch, month, day and hour of this moment',
       methodNumber: 'By number',
       methodNumberDesc: 'Hold the question in mind and give a 3-digit number, or draw one',
+      methodChar: 'By one character',
+      methodCharDesc: 'Give a single character; the AI splits it and counts strokes',
+      charPlaceholder: 'One character, e.g. 想',
+      charHint: 'The AI splits it: top/bottom, left/right, outer/inner, or an even half for unsplittable characters.',
+      charEcho: '「{char}」 sent to the AI to split and cast — see the conversation.',
+      cuoguaRow: 'Inverse',
+      cuoguaNote: 'All six lines flipped — the hidden, opposite side',
+      zongguaRow: 'Reversed',
+      zongguaFixed: 'self-reversing',
+      zongguaNote: 'Turned upside down — the other party\'s view',
+      kongwangRow: 'Void',
+      kongHitRow: 'Void hit',
+      shenshaRow: 'Stars',
+      notHit: 'none',
+      charMethodName: 'By character',
+      charChatHead: '[Meihua Yishu - one-character divination]',
+      charChatAsk: 'Split this character by the classical rules, count both parts, then cast with meihuayi_cast (method="char").',
+      charChatFlow: 'Show the full chart first, then ask me for the omens (weather/place/people/sound/colour/objects/motion) — do not infer yet.',
+      charChatSave: 'After inferring, write the omens and your reading back into the record.',
+      charChatGuard: '(If meihuayi_cast ignores method="char" and falls back to a time cast, the host has not been restarted — ask me to restart first.)',
+      charQuestion: 'Question: ',
+      charRequired: 'Write one character first.',
+      charTarget: 'Character: ',
+      charManual: 'Could not send automatically — please send it yourself.',
+      charCopied: 'Copied — paste it into the composer and send.',
       numberPlaceholder: '3 digits, 100-999',
       randomDraw: 'Draw a number',
       cast: 'Cast',
@@ -258,6 +308,7 @@ window.__ModuleLoader__.load({
       method: 'time',
       question: '',
       number: '',
+      char: '',
       busy: false,
       error: '',
       notice: '',
@@ -350,6 +401,14 @@ window.__ModuleLoader__.load({
      * ══════════════════════════════════════════ */
     async function doCast() {
       const { method, number, question } = state;
+      // 一字占：面板不自己排盘，把字交给对话里的 AI 拆字算笔画，再由它调 meihuayi_cast。
+      if (method === 'char') {
+        const ch = String(state.char || '').trim();
+        if (!ch) return setState({ error: t('charRequired') });
+        if (!String(question || '').trim()) return setState({ error: t('questionRequired') });
+        fillChatChar(ch);
+        return;
+      }
       if (method === 'number') {
         const n = String(number).trim();
         if (!/^\d{3}$/.test(n)) {
@@ -535,6 +594,37 @@ window.__ModuleLoader__.load({
       }
     }
 
+    function fillChatChar(ch) {
+      const text = [
+        t('charChatHead'),
+        `${t('charQuestion')}${state.question || '（未填写）'}`,
+        `${t('charTarget')}${ch}`,
+        '',
+        t('charChatAsk'),
+        t('charChatFlow'),
+        t('charChatSave'),
+        t('charChatGuard'),
+      ].join('\n');
+      if (inputActions && typeof inputActions.setDraft === 'function') {
+        const actions = inputActions;
+        actions.setDraft(text);
+        if (typeof actions.submit === 'function') {
+          setTimeout(() => {
+            try {
+              actions.submit();
+              setState({ open: false, notice: t('charEcho').replace('{char}', ch), char: '', cast: null });
+            } catch (error) {
+              setState({ notice: `${t('charManual')}${error.message}` });
+            }
+          }, 0);
+          return;
+        }
+        setState({ notice: t('charManual') });
+        return;
+      }
+      copy(text).then((okay) => setState({ notice: okay ? t('charCopied') : t('charManual') }));
+    }
+
     function fillChat() {
       const current = state.cast;
       if (!current) return;
@@ -645,6 +735,7 @@ window.__ModuleLoader__.load({
 .mhy-method[data-on="1"]{border-color:var(--dsw-alias-brand-primary);box-shadow:inset 0 0 0 1px var(--dsw-alias-brand-primary)}
 .mhy-method b{display:block;font-size:calc(13px * var(--mhy-s,1));color:var(--dsw-alias-label-primary);margin-bottom:2px}
 .mhy-method span{font-size:calc(12px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary)}
+.mhy-method-wide{grid-column:1/-1}
 .mhy-card{margin-top:12px;padding:12px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-2)}
 /* 起卦信息：两列对齐成表格式；上下两块表用同一列宽，所以纵向也能对齐 */
 .mhy-rows{display:grid;grid-template-columns:68px 1fr;row-gap:3px;align-items:baseline}
@@ -1054,7 +1145,41 @@ body[data-ds-dark-theme] .mhy-panel{
         relation: p.relation || ben.relation || '',
         bianRelation: bian.relation,
         dongyao: { index: moving, name: String(p.dongyao || '').slice(0, 2), text: p.dongyao || '' },
+        cuogua: p.cuogua || '',
+        zonggua: p.zonggua || '',
+        kongwang: p.kongwang || null,
+        shensha: Array.isArray(p.shensha) ? p.shensha : [],
       };
+    }
+
+    /* 进阶盘（错卦/综卦/空亡/神煞）两种来源形状不同：
+       新起卦是引擎对象，历史卦例是 pattern 里的字符串；这里统一成显示文本。 */
+    function cuoText(r) {
+      const v = r && r.cuogua;
+      if (!v) return '';
+      return typeof v === 'string' ? v : `${v.symbol} ${v.fullName}`;
+    }
+    function zongText(r) {
+      const v = r && r.zonggua;
+      if (!v) return '';
+      if (typeof v === 'string') return v;
+      return r.zongguaFixed ? `${t('zongguaFixed')}（${v.fullName}）` : `${v.symbol} ${v.fullName}`;
+    }
+    function kongParts(r) {
+      const k = r && r.kongwang;
+      if (!k) return null;
+      const kong = Array.isArray(k.kong) ? k.kong.join('') : k.kong || '';
+      const pick = (v) => (v && typeof v === 'object' ? v.text : v) || '';
+      return {
+        head: `${kong}${k.xun ? `（${k.xun}）` : ''}`,
+        detail: [pick(k.body), pick(k.use)].filter(Boolean).join(' · '),
+      };
+    }
+    function shenshaText(r) {
+      const list = r && r.shensha;
+      if (!Array.isArray(list) || !list.length) return '';
+      const hits = list.filter((x) => x && x.text && x.text !== '未中');
+      return hits.length ? hits.map((x) => `${x.name}→${x.text}`).join(' · ') : t('notHit');
     }
 
     function ChartView({ data }) {
@@ -1077,7 +1202,15 @@ body[data-ds-dark-theme] .mhy-panel{
           h(
             InfoRow,
             { label: t('methodLabel') },
-            h('span', null, r.method === '数字' ? t('methodNumber') : t('methodTime')),
+            h(
+              'span',
+              null,
+              r.method === '数字'
+                ? t('methodNumber')
+                : r.method === '一字占'
+                  ? t('methodChar')
+                  : t('methodTime'),
+            ),
             r.methodDetail ? h('span', { className: 'mhy-dim' }, `· ${r.methodDetail}`) : null,
           ),
           r.question ? h(InfoRow, { label: t('questionRow') }, h('span', null, r.question)) : null,
@@ -1106,6 +1239,27 @@ body[data-ds-dark-theme] .mhy-panel{
             h('span', { className: 'mhy-dim' }, '→'),
             h('b', { className: 'mhy-brand' }, r.relation),
           ),
+          cuoText(r)
+            ? h(
+                InfoRow,
+                { label: t('cuoguaRow') },
+                h('span', null, cuoText(r)),
+                h('span', { className: 'mhy-dim' }, ` · ${t('cuoguaNote')}`),
+              )
+            : null,
+          zongText(r)
+            ? h(
+                InfoRow,
+                { label: t('zongguaRow') },
+                h('span', null, zongText(r)),
+                h('span', { className: 'mhy-dim' }, ` · ${t('zongguaNote')}`),
+              )
+            : null,
+          kongParts(r) ? h(InfoRow, { label: t('kongwangRow') }, h('span', null, kongParts(r).head)) : null,
+          kongParts(r) && kongParts(r).detail
+            ? h(InfoRow, { label: t('kongHitRow') }, h('span', { className: 'mhy-dim' }, kongParts(r).detail))
+            : null,
+          shenshaText(r) ? h(InfoRow, { label: t('shenshaRow') }, h('span', null, shenshaText(r))) : null,
         ),
       );
     }
@@ -1282,6 +1436,17 @@ body[data-ds-dark-theme] .mhy-panel{
             h('b', null, `# ${t('methodNumber')}`),
             h('span', null, t('methodNumberDesc')),
           ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'mhy-method mhy-method-wide',
+              'data-on': s.method === 'char' ? '1' : '0',
+              onClick: () => setState({ method: 'char', error: '' }),
+            },
+            h('b', null, `字 ${t('methodChar')}`),
+            h('span', null, t('methodCharDesc')),
+          ),
         ),
         s.method === 'number'
           ? h(
@@ -1300,6 +1465,23 @@ body[data-ds-dark-theme] .mhy-panel{
                 { type: 'button', className: 'mhy-btn mhy-btn-sm', onClick: doRandomCast, disabled: s.busy },
                 t('randomDraw'),
               ),
+            )
+          : null,
+        s.method === 'char'
+          ? h(
+              'div',
+              { style: { marginTop: '10px' } },
+              h('input', {
+                className: 'mhy-input',
+                value: s.char,
+                maxLength: 2,
+                placeholder: t('charPlaceholder'),
+                onChange: (e) => setState({ char: e.target.value.slice(0, 2), error: '' }),
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter') doCast();
+                },
+              }),
+              h('div', { className: 'mhy-hint' }, t('charHint')),
             )
           : null,
         h(
