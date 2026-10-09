@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.2.0';
+    const VERSION = '1.2.1';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
