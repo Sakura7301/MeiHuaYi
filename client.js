@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.3.0';
+    const VERSION = '1.3.1';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -75,6 +75,7 @@ window.__ModuleLoader__.load({
       methodCharDesc: '写下一个字，交给 AI 拆字算笔画起卦（测字法）',
       methodManual: '手动起卦',
       methodManualDesc: '直接指定上卦、下卦与动爻，六十四卦任意组合',
+      manualNeedRestart: '宿主还是旧版：不认「手动起卦」，会把它当成时间起卦静默算错。请重启 DSH 后再用。',
       manualUpper: '上卦',
       manualLower: '下卦',
       manualMoving: '动爻',
@@ -213,6 +214,7 @@ window.__ModuleLoader__.load({
       methodCharDesc: 'Give a single character; the AI splits it and counts strokes',
       methodManual: 'By hexagram',
       methodManualDesc: 'Pick the upper and lower trigram and the moving line directly',
+      manualNeedRestart: 'The host is an older build: it does not know "by hexagram" and would silently cast by time instead. Restart DSH first.',
       manualUpper: 'Upper',
       manualLower: 'Lower',
       manualMoving: 'Moving line',
@@ -415,6 +417,15 @@ window.__ModuleLoader__.load({
     /* ══════════════════════════════════════════
      *  动作
      * ══════════════════════════════════════════ */
+    /**
+     * 客户端要了「手动起卦」，宿主是不是真按手动算的？
+     *
+     * 客户端与宿主是两份独立加载的代码：只刷新页面、没重启宿主时，旧宿主不认
+     * method="manual"，会**默认当成时间起卦**——选好的卦被悄悄换成一个时间卦。
+     * 这种「不报错但结果错」最危险，所以这里必须显式比对，宁可不显示结果。
+     */
+    const manualAnswerMismatched = (sentMethod, resultMethod) => sentMethod === 'manual' && resultMethod !== '手动';
+
     async function doCast() {
       const { method, number, question } = state;
       // 一字占：面板不自己排盘，把字交给对话里的 AI 拆字算笔画，再由它调 meihuayi_cast。
@@ -443,6 +454,11 @@ window.__ModuleLoader__.load({
           payload.moving = Number(state.manualMoving);
         }
         const result = await api('cast', payload);
+        // 旧宿主会把手动起卦悄悄按时间起卦算，这里直接拦下，不给错误结果。
+        if (manualAnswerMismatched(method, result.result && result.result.method)) {
+          setState({ busy: false, cast: null, error: t('manualNeedRestart') });
+          return;
+        }
         setState({ cast: result, busy: false, records: null });
       } catch (error) {
         setState({ busy: false, error: error.message });

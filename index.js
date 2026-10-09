@@ -19,7 +19,7 @@ import { REFERENCES, SKILL_BODY } from './lib/protocol.js';
 export const name = 'meihuayi';
 
 /** 宿主半边版本；会写进装配日志，用来确认线上加载的是哪一版代码。 */
-export const HOST_VERSION = '1.3.0';
+export const HOST_VERSION = '1.3.1';
 
 /**
  * 把装配过程中的异常写进插件数据目录，便于在没有宿主日志时排查。
