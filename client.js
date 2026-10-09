@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.3.2';
+    const VERSION = '1.4.0';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -1328,6 +1328,11 @@ body[data-ds-dark-theme] .mhy-panel{
             { label: t('wuxingShort'), big: true },
             h(WuxingNodes, { wuxing: r.wuxing, fallback: r.wuxingText }),
           ),
+          // 空亡与逢空紧跟在旺衰下面：都是「当下状态」的判据，挨着看好对照
+          kongParts(r) ? h(InfoRow, { label: t('kongwangRow') }, h('span', null, kongParts(r).head)) : null,
+          kongParts(r) && kongParts(r).detail
+            ? h(InfoRow, { label: t('kongHitRow') }, h('span', { className: 'mhy-dim' }, kongParts(r).detail))
+            : null,
           h(
             InfoRow,
             { label: t('methodLabel') },
@@ -1370,10 +1375,7 @@ body[data-ds-dark-theme] .mhy-panel{
           !zongCard && zongText(r)
             ? h(InfoRow, { label: t('zongguaRow') }, h('span', null, zongText(r)))
             : null,
-          kongParts(r) ? h(InfoRow, { label: t('kongwangRow') }, h('span', null, kongParts(r).head)) : null,
-          kongParts(r) && kongParts(r).detail
-            ? h(InfoRow, { label: t('kongHitRow') }, h('span', { className: 'mhy-dim' }, kongParts(r).detail))
-            : null,
+          // 空亡 / 逢空已挪到上方「旺衰」下面（都是当下状态判据，挨着看好对照）
           shenshaText(r) ? h(InfoRow, { label: t('shenshaRow') }, h('span', null, shenshaText(r))) : null,
         ),
       );
