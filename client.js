@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.3.1';
+    const VERSION = '1.3.2';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -83,10 +83,8 @@ window.__ModuleLoader__.load({
       charHint: '拆字与笔画由 AI 判断：上下结构取上半/下半，左右取左半/右半，包围取外框/内核，独体字按总笔画对半分。',
       charEcho: '已把「{char}」交给 AI 拆字起卦，请看对话。',
       cuoguaRow: '错卦',
-      cuoguaNote: '六爻全翻，看反面与隐藏面',
       zongguaRow: '综卦',
       zongguaFixed: '覆卦不动',
-      zongguaNote: '上下颠倒，换对方视角',
       kongwangRow: '空亡',
       kongHitRow: '逢空',
       shenshaRow: '神煞',
@@ -222,10 +220,8 @@ window.__ModuleLoader__.load({
       charHint: 'The AI splits it: top/bottom, left/right, outer/inner, or an even half for unsplittable characters.',
       charEcho: '「{char}」 sent to the AI to split and cast — see the conversation.',
       cuoguaRow: 'Inverse',
-      cuoguaNote: 'All six lines flipped — the hidden, opposite side',
       zongguaRow: 'Reversed',
       zongguaFixed: 'self-reversing',
-      zongguaNote: 'Turned upside down — the other party\'s view',
       kongwangRow: 'Void',
       kongHitRow: 'Void hit',
       shenshaRow: 'Stars',
@@ -815,15 +811,15 @@ body[data-ds-dark-theme] .mhy-panel{
 .mhy-gz-unit{color:var(--dsw-alias-label-secondary)}
 .mhy-wx-state{color:var(--dsw-alias-label-secondary)}
 /* 五张卦卡同排（主卦/互卦/变卦/错卦/综卦）。
-   宽度用「百分比基准 + flex-grow:0」：每行恰好摆满 5/3/2 张，折行时
-   末行的孤卡也不会被撑成整行宽（撑满会把六爻拉成巨型长条）。
-   爻线是百分比宽度，随卡宽自适应。 */
-.mhy-hexes{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;justify-content:center;margin:12px 0}
-.mhy-hex{flex:0 1 calc(20% - 9px);min-width:0;padding:9px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-base)}
-.mhy-hex-head{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.mhy-hex-tag{font-size:calc(11px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary);white-space:nowrap}
-.mhy-hex-name{font-size:calc(13.5px * var(--mhy-s,1));font-weight:600;line-height:1.35;word-break:break-word}
-.mhy-hex-note{flex:1 1 100%;font-size:calc(10.5px * var(--mhy-s,1));line-height:1.45;color:var(--dsw-alias-label-secondary)}
+   ⚠️ box-sizing 必须是 border-box：否则 flex-basis 不含内边距与边框，
+   五张的宽度加起来会超出容器，第 5 张就被挤到第二行。
+   宽度用「百分比基准 + flex-grow:0」：每行恰好摆满，孤卡也不会被撑满；
+   爻线是百分比宽度，跟着卡宽一起缩放。 */
+.mhy-hexes{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;justify-content:center;margin:12px 0}
+.mhy-hex{box-sizing:border-box;flex:0 1 calc(20% - 7px);min-width:0;padding:8px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-base)}
+.mhy-hex-head{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.mhy-hex-tag{font-size:calc(10.5px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary);white-space:nowrap}
+.mhy-hex-name{font-size:calc(12.5px * var(--mhy-s,1));font-weight:600;line-height:1.3;word-break:break-word}
 /* 每个三爻：说明占整行，爻线也占整行 —— 不再用左侧标签列，六爻等宽对齐 */
 .mhy-tri + .mhy-tri{margin-top:10px}
 .mhy-tri-cap{display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:calc(12px * var(--mhy-s,1));line-height:1.3;color:var(--dsw-alias-label-secondary)}
@@ -873,15 +869,14 @@ body[data-ds-dark-theme] .mhy-panel{
 .mhy-switch button[data-on="1"]{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}
 .mhy-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:calc(12px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary)}
 .mhy-stats b{color:var(--dsw-alias-label-primary)}
-/* 五张卦卡降档：宽屏一行五张，中等屏三张，窄屏两张。同样不伸展，末行不留撑满的孤卡。 */
-@media (max-width:699px){
+/* 窄屏降档：带宽不够时五张并排会读不清，退成三张 / 两张。 */
+@media (max-width:659px){
   .mhy-hex{flex:0 1 calc(33.333% - 7px)}
   .mhy-hexes{gap:9px}
 }
-@media (max-width:479px){
-  .mhy-hex{flex:0 1 calc(50% - 6px);padding:8px}
-  .mhy-hex-name{font-size:calc(12.5px * var(--mhy-s,1))}
-  .mhy-guaci{font-size:calc(12px * var(--mhy-s,1))}
+@media (max-width:459px){
+  .mhy-hex{flex:0 1 calc(50% - 5px)}
+  .mhy-guaci{font-size:calc(11.5px * var(--mhy-s,1))}
 }
 /* 窄屏（手机）：输入框下方那一行极其拥挤，只留图标最清爽 */
 @media (max-width:640px){
@@ -1008,7 +1003,7 @@ body[data-ds-dark-theme] .mhy-panel{
       );
     }
 
-    function Hexagram({ title, gua, bodySide, note, hideScripture }) {
+    function Hexagram({ title, gua, bodySide }) {
       // bodySide：'upper' | 'lower' | null —— 体卦在上卦还是下卦（互卦不标体用）。
       const upperRole = bodySide === 'upper' ? 'body' : bodySide === 'lower' ? 'use' : null;
       const lowerRole = bodySide === 'lower' ? 'body' : bodySide === 'upper' ? 'use' : null;
@@ -1021,15 +1016,11 @@ body[data-ds-dark-theme] .mhy-panel{
           { className: 'mhy-hex-head' },
           h('span', { className: 'mhy-hex-tag' }, title),
           h('span', { className: 'mhy-hex-name' }, `${gua.symbol} ${gua.fullName}`),
-          // 错卦/综卦是参考视角，卡内带一句取用说明；主/互/变不带。
-          note ? h('span', { className: 'mhy-hex-note' }, note) : null,
         ),
         h(Trigram, { info: gua.upperInfo, role: upperRole, pattern: gua.pattern, movingIndex, base: 3 }),
         h(Trigram, { info: gua.lowerInfo, role: lowerRole, pattern: gua.pattern, movingIndex, base: 0 }),
-        // 卦辞统一显示；旧卦例没存互卦卦辞时直接不渲染，避免空的「」
-        !hideScripture && gua.scripture
-          ? h('div', { className: 'mhy-guaci' }, `「${gua.scripture}」`)
-          : null,
+        // 卦辞统一显示（错卦/综卦也带）；旧卦例没存到卦辞时直接不渲染，避免空的「」
+        gua.scripture ? h('div', { className: 'mhy-guaci' }, `「${gua.scripture}」`) : null,
       );
     }
 
@@ -1223,6 +1214,9 @@ body[data-ds-dark-theme] .mhy-panel{
         dongyao: { index: moving, name: String(p.dongyao || '').slice(0, 2), text: p.dongyao || '' },
         cuogua: p.cuogua || '',
         zonggua: p.zonggua || '',
+        // 错卦/综卦的卦辞（v1.3.2 起存；更早的卦例没有这两个字段，卡上就不显示卦辞）
+        cuoguaGuaci: p.cuogua_guaci || '',
+        zongguaGuaci: p.zonggua_guaci || '',
         kongwang: p.kongwang || null,
         shensha: Array.isArray(p.shensha) ? p.shensha : [],
       };
@@ -1287,7 +1281,8 @@ body[data-ds-dark-theme] .mhy-panel{
         gua: {
           symbol: split.symbol,
           fullName: split.fullName,
-          scripture: '',
+          // 卦辞从卦例里取（老卦例没这两个字段就是空，卡上自然不显示）
+          scripture: String((kind === 'cuogua' ? r.cuoguaGuaci : r.zongguaGuaci) || '').replace(/^「|」$/g, ''),
           pattern,
           upperInfo: { name: sides.upper, element: TRIGRAM_FACTS[sides.upper].element },
           lowerInfo: { name: sides.lower, element: TRIGRAM_FACTS[sides.lower].element },
@@ -1347,25 +1342,9 @@ body[data-ds-dark-theme] .mhy-panel{
           h(Hexagram, { title: t('ben'), gua: r.ben, bodySide }),
           h(Hexagram, { title: t('hu'), gua: r.hu, bodySide: null }),
           h(Hexagram, { title: t('bian'), gua: r.bian, bodySide }),
-          // 错卦/综卦不显示卦辞：它们是参考视角，卡面留白不如让主/互/变的信息更突出
-          cuoCard
-            ? h(Hexagram, {
-                title: t('cuoguaRow'),
-                gua: cuoCard.gua,
-                bodySide: null,
-                note: t('cuoguaNote'),
-                hideScripture: true,
-              })
-            : null,
-          zongCard
-            ? h(Hexagram, {
-                title: t('zongguaRow'),
-                gua: zongCard.gua,
-                bodySide: null,
-                note: `${t('zongguaNote')}${zongCard.fixed ? ` · ${t('zongguaFixed')}` : ''}`,
-                hideScripture: true,
-              })
-            : null,
+          // 错卦/综卦与主/互/变同排，样式完全一致（同样带卦辞、同样不带说明文字）
+          cuoCard ? h(Hexagram, { title: t('cuoguaRow'), gua: cuoCard.gua, bodySide: null }) : null,
+          zongCard ? h(Hexagram, { title: t('zongguaRow'), gua: zongCard.gua, bodySide: null }) : null,
         ),
         h(
           'div',
@@ -1386,20 +1365,10 @@ body[data-ds-dark-theme] .mhy-panel{
           ),
           // 错卦/综卦正常都在上面的卦卡里；只有卦卡解析不出来时才退回文字行，信息不丢
           !cuoCard && cuoText(r)
-            ? h(
-                InfoRow,
-                { label: t('cuoguaRow') },
-                h('span', null, cuoText(r)),
-                h('span', { className: 'mhy-dim' }, ` · ${t('cuoguaNote')}`),
-              )
+            ? h(InfoRow, { label: t('cuoguaRow') }, h('span', null, cuoText(r)))
             : null,
           !zongCard && zongText(r)
-            ? h(
-                InfoRow,
-                { label: t('zongguaRow') },
-                h('span', null, zongText(r)),
-                h('span', { className: 'mhy-dim' }, ` · ${t('zongguaNote')}`),
-              )
+            ? h(InfoRow, { label: t('zongguaRow') }, h('span', null, zongText(r)))
             : null,
           kongParts(r) ? h(InfoRow, { label: t('kongwangRow') }, h('span', null, kongParts(r).head)) : null,
           kongParts(r) && kongParts(r).detail
