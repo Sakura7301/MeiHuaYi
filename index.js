@@ -19,7 +19,7 @@ import { REFERENCES, SKILL_BODY } from './lib/protocol.js';
 export const name = 'meihuayi';
 
 /** 宿主半边版本；会写进装配日志，用来确认线上加载的是哪一版代码。 */
-export const HOST_VERSION = '1.4.1';
+export const HOST_VERSION = '1.4.2';
 
 /**
  * 把装配过程中的异常写进插件数据目录，便于在没有宿主日志时排查。
@@ -41,7 +41,7 @@ function diagnose(journal, message) {
  */
 export function apply(ctx, config = {}) {
   const journal = createJournal(config);
-  const ops = createOperations(journal, { hostVersion: HOST_VERSION });
+  const ops = createOperations(journal);
 
   diagnose(journal, `apply() 开始 · 宿主 v${HOST_VERSION} · 卦例库 ${journal.file}`);
   ctx.logger?.info?.(`[meihuayi] 卦例库：${journal.file}`);
