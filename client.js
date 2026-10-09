@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -606,7 +606,7 @@ window.__ModuleLoader__.load({
 .mhy-dock-icon{color:var(--dsw-alias-brand-primary);font-size:calc(13px * var(--mhy-s,1));line-height:1}
 /* 面板向上弹出：fixed 定位 + 运行时量出的坐标（贴在按钮上方、宽度对齐整条 dock 行），
    既不占文档流、不受祖先 overflow 裁剪，也不会影响同一行的其它控件。 */
-.mhy-panel{--mhy-wx-wood-bg:#15803d;--mhy-wx-wood-fg:#ffffff;--mhy-wx-wood-bd:#15803d;--mhy-wx-fire-bg:#d43b3b;--mhy-wx-fire-fg:#ffffff;--mhy-wx-fire-bd:#d43b3b;--mhy-wx-earth-bg:#e9c046;--mhy-wx-earth-fg:#3d2f00;--mhy-wx-earth-bd:#bf9610;--mhy-wx-metal-bg:#ffffff;--mhy-wx-metal-fg:#2b3138;--mhy-wx-metal-bd:#9aa5b1;--mhy-wx-water-bg:#1c2026;--mhy-wx-water-fg:#f4f7fa;--mhy-wx-water-bd:#1c2026;position:fixed;z-index:60;display:flex;flex-direction:column;max-height:min(62vh,600px);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.16);overflow:hidden;font-size:calc(13px * var(--mhy-s,1))}
+.mhy-panel{--mhy-wx-wood-bg:#15803d;--mhy-wx-wood-fg:#ffffff;--mhy-wx-wood-bd:#15803d;--mhy-wx-fire-bg:#d43b3b;--mhy-wx-fire-fg:#ffffff;--mhy-wx-fire-bd:#d43b3b;--mhy-wx-earth-bg:#e9c046;--mhy-wx-earth-fg:#3d2f00;--mhy-wx-earth-bd:#bf9610;--mhy-wx-metal-bg:#ffffff;--mhy-wx-metal-fg:#2b3138;--mhy-wx-metal-bd:#9aa5b1;--mhy-wx-water-bg:#1c2026;--mhy-wx-water-fg:#f4f7fa;--mhy-wx-water-bd:#1c2026;--mhy-bar:#20262b;--mhy-bar-edge:rgba(255,255,255,.55);--mhy-move:#2563eb;--mhy-move-edge:rgba(255,255,255,.35);--mhy-accent:#1d4ed8;--mhy-body-bg:#2563eb;--mhy-body-bd:#2563eb;--mhy-body-fg:#ffffff;--mhy-use-bg:#5f6a78;--mhy-use-bd:#5f6a78;--mhy-use-fg:#ffffff;position:fixed;z-index:60;display:flex;flex-direction:column;max-height:min(62vh,600px);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.16);overflow:hidden;font-size:calc(13px * var(--mhy-s,1))}
 .mhy-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--dsw-alias-border-l1)}
 .mhy-head h2{margin:0;font-size:calc(15px * var(--mhy-s,1));font-weight:600}
 .mhy-head .mhy-sub{color:var(--dsw-alias-label-secondary);font-size:calc(12px * var(--mhy-s,1))}
@@ -655,7 +655,7 @@ window.__ModuleLoader__.load({
 .mhy-v .mhy-wx-state{font-size:calc(13px * var(--mhy-s,1))}
 .mhy-v .mhy-gz-unit{font-size:calc(12px * var(--mhy-s,1));font-weight:400}
 .mhy-dim{color:var(--dsw-alias-label-secondary);font-weight:400}
-.mhy-brand{color:var(--dsw-alias-brand-primary)}
+.mhy-brand{color:var(--mhy-accent)}
 /* 五行色块：背景承担颜色，文字只保证与背景的对比度（传统配色 木绿/火红/土黄/金白/水黑） */
 /* ══ 五行配色：色值写死在插件自己的样式里（见上方 .mhy-panel 的 --mhy-wx-* ）══
    以前用 theme.overrideTokens 注册 --mhy-wx-*，主题插件一换就把它们清掉，
@@ -664,7 +664,7 @@ window.__ModuleLoader__.load({
    主题插件改不动我的色值。 */
 body[data-ds-dark-theme] .mhy-panel{
   --mhy-wx-metal-bg:#e9edf2; --mhy-wx-metal-fg:#1f242a; --mhy-wx-metal-bd:#e9edf2;
-  --mhy-wx-water-bg:#0b0e11; --mhy-wx-water-fg:#eef2f6; --mhy-wx-water-bd:#6b7480;
+  --mhy-wx-water-bg:#0b0e11; --mhy-wx-water-fg:#eef2f6; --mhy-wx-water-bd:#6b7480; --mhy-bar:#e9eef0; --mhy-bar-edge:rgba(0,0,0,.6); --mhy-move:#4f9bf5; --mhy-move-edge:rgba(0,0,0,.4); --mhy-accent:#7cb3ff; --mhy-body-bg:#2f6fe4; --mhy-body-bd:#2f6fe4; --mhy-body-fg:#ffffff; --mhy-use-bg:#59606b; --mhy-use-bd:#6b7480; --mhy-use-fg:#eef2f6;
 }
 .mhy-wx{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;padding:0 3px;border-radius:4px;border:1px solid transparent;font-size:calc(12px * var(--mhy-s,1));line-height:calc(17px * var(--mhy-s,1));font-weight:600;text-align:center}
 .mhy-wx-wood{background:var(--mhy-wx-wood-bg);color:var(--mhy-wx-wood-fg);border-color:var(--mhy-wx-wood-bd)}
@@ -688,12 +688,14 @@ body[data-ds-dark-theme] .mhy-panel{
 .mhy-tri-name{font-size:calc(13px * var(--mhy-s,1));font-weight:600}
 .mhy-tri-lines{display:flex;flex-direction:column;gap:5px}
 .mhy-line{display:flex;align-items:center;justify-content:space-between;height:10px}
-.mhy-bar{height:10px;border-radius:2px;background:var(--dsw-alias-label-primary)}
+/* 爻线与体/用徽标：色值自带，不引用任何 --dsw-* 令牌——主题换肤改不动卦象配色。
+   卡片底色由主题决定，所以只按明暗两套取值，并加 1px 描边，任何底色上都看得见。 */
+.mhy-bar{height:10px;border-radius:2px;background:var(--mhy-bar);box-shadow:0 0 0 1px var(--mhy-bar-edge)}
 .mhy-yang .mhy-bar{width:100%}
 .mhy-yin .mhy-bar{width:44%}
-.mhy-moving .mhy-bar{background:var(--dsw-alias-brand-primary)}
-.mhy-badge{margin-left:auto;font-size:calc(10px * var(--mhy-s,1));line-height:calc(15px * var(--mhy-s,1));padding:0 5px;border-radius:4px;border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}
-.mhy-badge[data-role="body"]{background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-base);font-weight:600}
+.mhy-moving .mhy-bar{background:var(--mhy-move);box-shadow:0 0 0 1px var(--mhy-move-edge)}
+.mhy-badge{margin-left:auto;font-size:calc(10px * var(--mhy-s,1));line-height:calc(15px * var(--mhy-s,1));padding:0 5px;border-radius:4px;font-weight:600;background:var(--mhy-use-bg);border:1px solid var(--mhy-use-bd);color:var(--mhy-use-fg)}
+.mhy-badge[data-role="body"]{background:var(--mhy-body-bg);border-color:var(--mhy-body-bd);color:var(--mhy-body-fg)}
 .mhy-guaci{margin-top:10px;font-size:calc(13px * var(--mhy-s,1));line-height:1.6;color:var(--dsw-alias-label-secondary)}
 .mhy-pre{margin:10px 0 0;padding:10px;background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:calc(12px * var(--mhy-s,1));line-height:1.65;white-space:pre-wrap;word-break:break-word;color:var(--dsw-alias-label-primary);max-height:320px;overflow:auto}
 .mhy-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}

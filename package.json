@@ -1,6 +1,6 @@
 {
   "name": "@sakura7301/dsh-meihuayi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "梅花易数卜卦插件：聊天起卦与界面点击起卦，输出完整排盘（主卦/互卦/变卦、动爻、体用生克），可保存卦例、记录外应与学习笔记。",
