@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.2.1';
+    const VERSION = '1.2.2';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -1074,6 +1074,12 @@ body[data-ds-dark-theme] .mhy-panel{
       return null;
     }
 
+    /**
+     * 旧卦例里存着「习坎为水」（v1.2.1 前引擎的卦名），按现行卦名显示为「坎为水」。
+     * 记录里的原文不动，只在显示时正名——这样历史卦例和新起的卦看起来一致。
+     */
+    const normalizeGuaName = (name) => String(name || '').replace(/^习坎/, '坎').replace(/([^\s])习坎/g, '$1坎');
+
     /** 单卦字段（"䷀ 乾为天（体用比和）" / "互见乾为天"）→ 卦象视图。 */
     function guaFromField(field, guaciField, moving) {
       const text = String(field || '');
@@ -1081,7 +1087,7 @@ body[data-ds-dark-theme] .mhy-panel{
       const symbol = split ? split[1] : '';
       const body = split ? split[2] : text;
       // 记录里互卦写成「互见乾为天」，标题栏已经写了「互卦」，名字里去掉前缀
-      const fullName = body.replace(/（[^）]*）\s*$/, '').replace(/^互见/, '').trim();
+      const fullName = normalizeGuaName(body.replace(/（[^）]*）\s*$/, '').replace(/^互见/, '').trim());
       const relation = (body.match(/（([^）]*)）/) || [])[1] || '';
       const sides = parseGuaName(fullName);
       if (!sides) return null;
@@ -1176,12 +1182,12 @@ body[data-ds-dark-theme] .mhy-panel{
     function cuoText(r) {
       const v = r && r.cuogua;
       if (!v) return '';
-      return typeof v === 'string' ? v : `${v.symbol} ${v.fullName}`;
+      return typeof v === 'string' ? normalizeGuaName(v) : `${v.symbol} ${v.fullName}`;
     }
     function zongText(r) {
       const v = r && r.zonggua;
       if (!v) return '';
-      if (typeof v === 'string') return v;
+      if (typeof v === 'string') return normalizeGuaName(v);
       return r.zongguaFixed ? `${t('zongguaFixed')}（${v.fullName}）` : `${v.symbol} ${v.fullName}`;
     }
 
@@ -1200,7 +1206,7 @@ body[data-ds-dark-theme] .mhy-panel{
       const hasSymbol = !!split;
       const body = (hasSymbol ? split[2] : text).replace(/（[^）]*）\s*$/, '').trim();
       if (!body) return null;
-      return { symbol: hasSymbol ? split[1] : '', fullName: body, fixed };
+      return { symbol: hasSymbol ? split[1] : '', fullName: normalizeGuaName(body), fixed };
     }
 
     /**
