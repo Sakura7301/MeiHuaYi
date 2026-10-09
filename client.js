@@ -133,6 +133,7 @@ window.__ModuleLoader__.load({
       submit: '保存反馈',
       saving: '保存中…',
       accuracy: '准确率',
+      ratedCount: '条已反馈',
       notes: '条学习笔记',
       records: '条卦例',
       pendingCount: '条待反馈',
@@ -265,6 +266,7 @@ window.__ModuleLoader__.load({
       submit: 'Save feedback',
       saving: 'Saving…',
       accuracy: 'Accuracy',
+      ratedCount: 'rated',
       notes: 'study notes',
       records: 'records',
       pendingCount: 'unresolved',
@@ -768,10 +770,12 @@ body[data-ds-dark-theme] .mhy-panel{
 .mhy-gz:last-child{margin-right:0}
 .mhy-gz-unit{color:var(--dsw-alias-label-secondary)}
 .mhy-wx-state{color:var(--dsw-alias-label-secondary)}
-/* 五张卦卡同排（主卦/互卦/变卦/错卦/综卦）。卡宽收窄以便宽屏一行放下五张；
-   爻线宽度是百分比，随卡宽自适应。折行按 3 张、2 张逐级降档，避免出现「4+1」孤行。 */
+/* 五张卦卡同排（主卦/互卦/变卦/错卦/综卦）。
+   宽度用「百分比基准 + flex-grow:0」：每行恰好摆满 5/3/2 张，折行时
+   末行的孤卡也不会被撑成整行宽（撑满会把六爻拉成巨型长条）。
+   爻线是百分比宽度，随卡宽自适应。 */
 .mhy-hexes{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;justify-content:center;margin:12px 0}
-.mhy-hex{flex:1 1 150px;min-width:132px;padding:9px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-base)}
+.mhy-hex{flex:0 1 calc(20% - 9px);min-width:0;padding:9px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-base)}
 .mhy-hex-head{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .mhy-hex-tag{font-size:calc(11px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary);white-space:nowrap}
 .mhy-hex-name{font-size:calc(13.5px * var(--mhy-s,1));font-weight:600;line-height:1.35;word-break:break-word}
@@ -825,13 +829,13 @@ body[data-ds-dark-theme] .mhy-panel{
 .mhy-switch button[data-on="1"]{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}
 .mhy-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:calc(12px * var(--mhy-s,1));color:var(--dsw-alias-label-secondary)}
 .mhy-stats b{color:var(--dsw-alias-label-primary)}
-/* 五张卦卡降档：宽屏一行五张，中等屏三张，窄屏两张。 */
-@media (max-width:779px){
-  .mhy-hex{flex:1 1 30%;min-width:118px}
+/* 五张卦卡降档：宽屏一行五张，中等屏三张，窄屏两张。同样不伸展，末行不留撑满的孤卡。 */
+@media (max-width:699px){
+  .mhy-hex{flex:0 1 calc(33.333% - 7px)}
   .mhy-hexes{gap:9px}
 }
-@media (max-width:499px){
-  .mhy-hex{flex:1 1 45%;min-width:104px;padding:8px}
+@media (max-width:479px){
+  .mhy-hex{flex:0 1 calc(50% - 6px);padding:8px}
   .mhy-hex-name{font-size:calc(12.5px * var(--mhy-s,1))}
   .mhy-guaci{font-size:calc(12px * var(--mhy-s,1))}
 }
@@ -1052,7 +1056,8 @@ body[data-ds-dark-theme] .mhy-panel{
     /** 「天山遁」→ { upper:'乾', lower:'艮' }；「乾为天」这类同位卦也认。 */
     function parseGuaName(rawName) {
       const name = String(rawName || '').replace(/^互见/, '').trim();
-      // 同位卦形如「乾为天」「离为火」，坎写作「习坎为水」，故「为」前可多字
+      // 同位卦形如「乾为天」「离为火」；坎写作「坎为水」，故「为」前允许多字
+      // （旧卦例可能存着「习坎为水」，这条规则同样认）
       const same = name.match(/^(.+)为(.)$/);
       if (same && NATURE_TRIGRAM[same[2]]) {
         const tri = NATURE_TRIGRAM[same[2]];
@@ -1394,10 +1399,13 @@ body[data-ds-dark-theme] .mhy-panel{
             ? h(
                 'div',
                 { className: 'mhy-stats' },
-                h('span', null, h('b', null, stats.total), ` ${t('notes')}`),
+                // 准确率的基数是「现存卦例里已反馈的那些」，笔记条数单独列，
+                // 免得删了卦例之后两个数字对不上、让人以为统计没生效。
+                h('span', null, h('b', null, stats.total ?? 0), ` ${t('ratedCount')}`),
                 h('span', null, `${t('accuracy')} `, h('b', null, `${stats.accuracy}%`)),
                 h('span', null, `${t('noteCorrect')} `, h('b', null, stats.correct)),
                 h('span', null, `${t('noteWrong')} `, h('b', null, stats.incorrect)),
+                h('span', null, h('b', null, stats.notes ?? 0), ` ${t('notes')}`),
               )
             : null,
         ),
@@ -1820,7 +1828,7 @@ body[data-ds-dark-theme] .mhy-panel{
                 h('span', null, h('b', null, s.overview.total), ` ${t('records')}`),
                 h('span', null, h('b', null, s.overview.pending), ` ${t('pendingCount')}`),
                 h('span', null, `${t('accuracy')} `, h('b', null, `${s.overview.stats.accuracy}%`)),
-                h('span', null, h('b', null, s.overview.stats.total), ` ${t('notes')}`),
+                h('span', null, h('b', null, s.overview.stats.notes ?? 0), ` ${t('notes')}`),
               )
             : null,
         ),
