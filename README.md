@@ -10,6 +10,10 @@
 
 ---
 
+![起卦面板](assets/panel.png)
+
+![卦象可视化](assets/chart.png)
+
 ## 功能
 
 | | |
@@ -30,7 +34,7 @@
 **通过 CLI**：
 
 ```sh
-dsh plugin install github:Sakura7301/dsh-meihuayi
+dsh plugin install github:Sakura7301/MeiHuaYi
 ```
 
 本插件**没有任何 npm 依赖**，因此无需构建步骤，也不需要 `allowBuilds` 授权。
@@ -116,7 +120,7 @@ locale/             中英文案
 
 ## 许可
 
-[Apache License 2.0](LICENSE)
+[MIT License](LICENSE)
 
 ---
 

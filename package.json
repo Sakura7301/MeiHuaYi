@@ -32,14 +32,14 @@
       ]
     }
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Sakura7301/dsh-meihuayi.git"
+    "url": "git+https://github.com/Sakura7301/MeiHuaYi.git"
   },
-  "homepage": "https://github.com/Sakura7301/dsh-meihuayi#readme",
+  "homepage": "https://github.com/Sakura7301/MeiHuaYi#readme",
   "bugs": {
-    "url": "https://github.com/Sakura7301/dsh-meihuayi/issues"
+    "url": "https://github.com/Sakura7301/MeiHuaYi/issues"
   },
   "keywords": [
     "dsh-plugin",
