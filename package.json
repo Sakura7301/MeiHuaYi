@@ -1,6 +1,6 @@
 {
   "name": "@sakura7301/dsh-meihuayi",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": true,
   "type": "module",
   "description": "梅花易数卜卦插件：聊天起卦与界面点击起卦，输出完整排盘（主卦/互卦/变卦、动爻、体用生克），可保存卦例、记录外应与学习笔记。",
@@ -18,7 +18,9 @@
     "data",
     "locale",
     "icon.svg",
-    "cordis.patch.yml"
+    "cordis.patch.yml",
+    "assets",
+    "screenshots.json"
   ],
   "dsh": {
     "bundle": {
@@ -51,5 +53,8 @@
     "divination",
     "梅花易数"
   ],
-  "author": "Sakura7301"
+  "author": "Sakura7301",
+  "scripts": {
+    "test": "node test/selftest.mjs"
+  }
 }
