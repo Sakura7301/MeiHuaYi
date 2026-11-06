@@ -16,7 +16,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'meihuayi';
     /** 界面上会显示这个版本号，便于确认页面上跑的是哪一版前端代码。 */
-    const VERSION = '1.4.2';
+    const VERSION = '1.4.3';
 
     /**
      * 五行配色令牌（背景 / 前景 / 描边，各含明暗两套取值）。
@@ -60,8 +60,8 @@ window.__ModuleLoader__.load({
       scaleXLarge: '特大',
       autoNote: '反馈后自动建立学习笔记',
       autoNoteHint:
-        '开启后：你在卦例里填完反馈并保存，AI 下次读卦例时会看到「已反馈但还没有笔记」并立即补建。' +
-        '注意 AI 不会自己启动——需要你下一次跟它说话时才会执行。',
+        '开启后：你在卦例里填完反馈并保存，宿主会立刻唤醒当前会话的 AI，让它按这条卦例建立学习笔记。' +
+        '关掉则只记录反馈，不建笔记；之后也可以让 AI 补建。',
       settingsSaved: '设置已保存',
       question: '所问之事',
       questionPlaceholder: '例如：这个月能不能拿到 offer（必填，写清问什么）',
@@ -199,11 +199,11 @@ window.__ModuleLoader__.load({
       scaleXLarge: 'XL',
       autoNote: 'Create a study note after feedback',
       autoNoteHint:
-        'When on, the AI will notice "feedback recorded but no note yet" the next time it reads the journal ' +
-        'and fill the note in. The AI cannot start on its own — it runs when you next talk to it.',
+        'When on, saving feedback wakes the AI in the current session, which writes the study note right away. ' +
+        'When off, only the feedback is stored and the note can be added later.',
       settingsSaved: 'Saved',
       question: 'Your question',
-      questionPlaceholder: 'e.g. Will I get the offer this month? (optional)',
+      questionPlaceholder: 'e.g. Will I get the offer this month? (required)',
       method: 'Method',
       methodTime: 'By time',
       methodTimeDesc: 'Uses the lunar year branch, month, day and hour of this moment',
@@ -936,9 +936,7 @@ body[data-ds-dark-theme] .mhy-panel{
             'div',
             {
               key: index,
-              className: `mhy-line ${pattern[index] ? 'mhy-yang' : 'mhy-yin'}${
-                movingIndex === index ? ' mhy-moving' : ''
-              }`,
+              className: `mhy-line ${pattern[index] ? 'mhy-yang' : 'mhy-yin'}`,
               title: `${['初', '二', '三', '四', '五', '上'][index]}爻${pattern[index] ? '阳' : '阴'}${
                 movingIndex === index ? '（动爻）' : ''
               }`,
